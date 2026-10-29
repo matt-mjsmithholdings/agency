@@ -3,9 +3,25 @@ import Link from "next/link";
 import { ApplicationForm } from "@/components/application-form";
 import { COMMISSION_FREE_DAYS } from "@/data/talent";
 
+const description = `Apply to join Cadvero — representation for up-and-coming influencers, actors, musicians and presenters. Takes a minute, and there's no commission for your first ${COMMISSION_FREE_DAYS} days.`;
+
 export const metadata: Metadata = {
-  title: "Talent",
-  description: `Join Cadvero — representation for up-and-coming influencers, actors, musicians and presenters. Apply in a minute: no commission for your first ${COMMISSION_FREE_DAYS} days.`,
+  title: "Apply for representation",
+  description,
+  alternates: { canonical: "/talent" },
+  openGraph: {
+    title: `Apply to Cadvero — 0% commission for your first ${COMMISSION_FREE_DAYS} days`,
+    description,
+    url: "/talent",
+    siteName: "Cadvero",
+    locale: "en_GB",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Apply to Cadvero — 0% commission for your first ${COMMISSION_FREE_DAYS} days`,
+    description,
+  },
 };
 
 const steps = [

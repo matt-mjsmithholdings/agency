@@ -1,7 +1,9 @@
+import { SITE_URL } from "@/lib/site";
+
 // Confirmation emails, rendered as table-based HTML with inline styles (what email clients
 // reliably support) plus a plain-text fallback. Colours match globals.css.
 
-const SITE = "https://www.cadvero.com";
+const SITE = SITE_URL;
 const INK = "#0b0b0c";
 const PAPER = "#f2efe9";
 const MUTED = "#6f6a63";
