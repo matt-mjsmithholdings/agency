@@ -1,6 +1,7 @@
 "use server";
 
 import { Resend } from "resend";
+import { hasApplied, rememberApplicant } from "@/lib/applicants";
 
 export type FormState = {
   status: "idle" | "success" | "error";
@@ -129,6 +130,13 @@ export async function submitApplication(_prev: FormState, formData: FormData): P
     return { status: "error", message: "Please keep it under 2,000 characters." };
   }
 
+  if (await hasApplied(email)) {
+    return {
+      status: "success",
+      message: "You've already applied with this email, so there's nothing more to do. We'll be in touch personally.",
+    };
+  }
+
   const label = APPLICANT_LABELS[kind] ?? "Other";
   const sent = await deliver(email, "We've received your application — Cadvero", [
     `Hi ${name},`,
@@ -150,6 +158,7 @@ export async function submitApplication(_prev: FormState, formData: FormData): P
       message: "Something went wrong sending your application. Please email us directly.",
     };
   }
+  await rememberApplicant(email, name);
 
   return {
     status: "success",
