@@ -2,6 +2,7 @@
 
 import { Resend } from "resend";
 import { hasApplied, rememberApplicant } from "@/lib/applicants";
+import { renderConfirmation, type ConfirmationEmail } from "@/lib/email";
 
 export type FormState = {
   status: "idle" | "success" | "error";
@@ -38,12 +39,12 @@ function isBot(formData: FormData) {
  * Emails a confirmation (with a copy of what they sent) to the person who filled in the form,
  * BCCing the team. Just logs when Resend isn't configured (e.g. local dev).
  */
-async function deliver(to: string, subject: string, lines: string[]): Promise<boolean> {
+async function deliver(to: string, subject: string, email: ConfirmationEmail): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.ENQUIRY_FROM_EMAIL;
   const bcc = process.env.ENQUIRY_BCC_EMAIL;
   const replyTo = process.env.ENQUIRY_REPLY_TO_EMAIL;
-  const text = lines.join("\n");
+  const { html, text } = renderConfirmation(email);
 
   if (!apiKey || !from || !bcc) {
     console.log(`[${subject}] to ${to}\n${text}`);
@@ -56,6 +57,7 @@ async function deliver(to: string, subject: string, lines: string[]): Promise<bo
     bcc,
     replyTo: replyTo || undefined,
     subject,
+    html,
     text,
   });
   if (error) {
@@ -83,19 +85,17 @@ export async function submitEnquiry(_prev: FormState, formData: FormData): Promi
   }
 
   const label = ENQUIRY_LABELS[type] ?? "Other";
-  const sent = await deliver(email, "We've received your enquiry — Cadvero", [
-    `Hi ${name},`,
-    "",
-    "Thanks for getting in touch with Cadvero. Someone from the team will reply to you personally.",
-    "",
-    "For reference, here's what you sent:",
-    "",
-    `Name: ${name}`,
-    `Email: ${email}`,
-    `Type: ${label}`,
-    "",
-    message,
-  ]);
+  const sent = await deliver(email, "We've received your enquiry — Cadvero", {
+    heading: "Thanks for getting in touch.",
+    name,
+    intro: "We've got your enquiry and someone from the team will reply to you personally.",
+    details: [
+      ["Name", name],
+      ["Email", email],
+      ["I'm from", label],
+      ["Message", message],
+    ],
+  });
   if (!sent) {
     return {
       status: "error",
@@ -138,20 +138,18 @@ export async function submitApplication(_prev: FormState, formData: FormData): P
   }
 
   const label = APPLICANT_LABELS[kind] ?? "Other";
-  const sent = await deliver(email, "We've received your application — Cadvero", [
-    `Hi ${name},`,
-    "",
-    "Thanks for applying to Cadvero. We review every application ourselves and will reply to you personally, whatever the answer.",
-    "",
-    "For reference, here's what you sent:",
-    "",
-    `Name: ${name}`,
-    `Email: ${email}`,
-    `I am: ${label}`,
-    `Work: ${link || "—"}`,
-    "",
-    about || "(no message)",
-  ]);
+  const sent = await deliver(email, "We've received your application — Cadvero", {
+    heading: "Thanks for applying.",
+    name,
+    intro: "We review every application ourselves and will reply to you personally, whatever the answer.",
+    details: [
+      ["Name", name],
+      ["Email", email],
+      ["I'm a", label],
+      ["Your work", link],
+      ["Anything else", about],
+    ],
+  });
   if (!sent) {
     return {
       status: "error",
